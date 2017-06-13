@@ -15,22 +15,6 @@ app.set('views', path.join(__dirname, 'views'));
 app.use('/scripts', Express.static(path.join(__dirname, '../client/scripts')));
 app.use('/node_modules', Express.static(path.join(__dirname, '../node_modules')));
 
-const waves = {
-  48: 'a1',
-  49: 'a1s',
-  50: 'b1',
-  51: 'c1',
-  52: 'c1s',
-  53: 'c2',
-  54: 'd1',
-  55: 'd1s',
-  56: 'e1',
-  57: 'f1',
-  58: 'f1s',
-  59: 'g1',
-  60: 'g1s',
-};
-
 app.get('/', (req, res) => {
     res.render('index');
 });
@@ -46,19 +30,40 @@ app.listen(app.get('PORT'), (err) => {
 
 var socket = binaryServer({port: 9001});
 
+function playTone(tone, stream) {
+  if (tone > 61 || tone < 1) {
+    console.log('undefined tone', tone);
+    return;
+  }
+  const file = fs.createReadStream(path.resolve(__dirname, 'wav', `${tone}.wav`));
+  file.pipe(stream);
+  file.on('end', () => {
+    file.unpipe(stream);
+  });
+
+  return file;
+}
+
 socket.on('connection', function(client) {
   client.on('stream', function(stream, meta) {
+    const files = [];
     stream.on('data', function (data) {
+      const type = data.readInt8(0);
       const tone = data.readInt8(1);
       const pressure = data.readInt8(2);
-      if (!waves[tone]) {
-        console.log('undefined tone', tone);
-        return;
+      switch (type) {
+        case -111:
+          files.push(playTone(tone, stream));
+          break;
       }
-      const file = fs.createReadStream(path.resolve(__dirname, 'wav', `${waves[tone]}.wav`));
-      file.pipe(stream);
+    });
+
+    stream.on('end', () => {
+      files.forEach(file => file.end());
     });
   });
 });
+
+process.setMaxListeners(0);
 
 module.exports = app;
