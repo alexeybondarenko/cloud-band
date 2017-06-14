@@ -28,7 +28,9 @@ app.listen(app.get('PORT'), (err) => {
   console.log(`Server is listening at http://localhost:${app.get('PORT')}`);
 })
 
-var socket = binaryServer({port: 9001});
+var socket = binaryServer({
+  port: 8081,
+});
 
 function playTone(tone, stream) {
   if (tone > 61 || tone < 1) {

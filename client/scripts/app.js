@@ -7,7 +7,7 @@
   window.AudioContext = window.AudioContext || window.webkitAudioContext;
   context = new AudioContext();
 
-  var client = new BinaryClient('ws://localhost:9001');
+  var client = new BinaryClient(`ws://${location.hostname}:8081`);
   var MidiStream;
 
   client.on('open', function() {
@@ -22,10 +22,11 @@
     source.buffer = buffer;                    // tell the source which sound to play
     source.connect(context.destination);       // connect the source to the context's destination (the speakers)
     source.start(0);                           // play the source now
+    console.timeEnd('send');
   }
 
   function handleAudioReceive(data) {
-    console.log('receive audio', data);
+    // console.log('receive audio', data);
     context.decodeAudioData(data, playSound);
   }
   function handleAudioFinish(data) {
@@ -38,6 +39,8 @@
 
   function myMIDIMessagehandler(e) {
     if (e.data[2] === 0) return;
+    // if (!MidiStream) return;
+    console.time('send');
     MidiStream.write(e.data);
   }
 
