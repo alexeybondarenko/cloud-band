@@ -51,11 +51,7 @@ socket.on('connection', function(client) {
       const type = data.readInt8(0);
       const tone = data.readInt8(1);
       const pressure = data.readInt8(2);
-      switch (type) {
-        case -111:
-          files.push(playTone(tone, stream));
-          break;
-      }
+      files.push(playTone(tone, stream));
     });
 
     stream.on('end', () => {
